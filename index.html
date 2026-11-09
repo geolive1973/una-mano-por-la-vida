@@ -29,4 +29,6 @@ document.querySelector('#staticDirectory').classList.add('js-ready');function re
 function openCategory(cat){active=cat;showResults(cat);$('#result').scrollIntoView({behavior:'smooth',block:'start'})}
 function showResults(cat){const t=translations[lang];$('#result').classList.add('show');$('#resTitle').textContent=t.categories.find(c=>c[0]===cat)?.[2];$('#resSummary').textContent=t.categoriesSub[cat]+' '+t.qualify;const items=$('#resItems');items.replaceChildren();orgs.filter(o=>o.cat.includes(cat)).forEach(o=>{const c=el('article','item');c.append(el('h4','',o.name),el('p','',o[lang]),el('div','loc','📍 '+o.place));const links=el('div','buttons');let tel=el('a','', '☎ '+t.phone);tel.href='tel:+'+o.phone;let site=el('a','site','↗ '+t.website);site.href=o.url;site.target='_blank';site.rel='noopener noreferrer';links.append(tel,site);c.append(links);items.append(c)})}
 $('#close').onclick=()=>{active=null;$('#result').classList.remove('show');$('#categories').scrollIntoView({behavior:'smooth',block:'start'})};$('#es').onclick=()=>{lang='es';render()};$('#en').onclick=()=>{lang='en';render()};render();
-</script></body></html>
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"10fa24a680684ebd85ee38fbb27792ec"}'></script>
+</body></html>
