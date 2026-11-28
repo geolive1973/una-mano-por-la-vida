@@ -16,7 +16,7 @@ const copy={
     urgent:'Ayuda y localizadores nacionales',urgentSub:'Para orientación durante el embarazo y búsqueda de recursos cercanos.',
     wic:'WIC: nutrición para embarazadas, madres, bebés y niños',medicaid:'Medicaid/CHIP: cobertura médica',healthy:'Healthy Start: programas locales',snap:'SNAP: asistencia alimentaria',tanf:'TANF y servicios sociales estatales',headstart:'Head Start y Early Head Start',
     option:'Option Line 24/7',care:'Buscar un centro de embarazo',standing:'Recursos por estado',
-    pdfTitle:'Directorio completo listo para imprimir',pdfText:'Consulta o descarga el PDF A4 vertical con los contactos de los 50 estados y los recursos nacionales.',pdfButton:'Abrir o imprimir el PDF',
+    pdfTitle:'Directorio completo listo para imprimir',pdfText:'Consulta el directorio A4 de los 50 estados y guárdalo como PDF desde la opción de imprimir.',pdfButton:'Abrir o guardar como PDF',
     note:'Los servicios, requisitos y contactos pueden cambiar. Confirma la información directamente con cada organización. Las organizaciones de política familiar pueden dedicarse a educación y defensa pública y no necesariamente ofrecen ayuda material directa.'
   },
   en:{
@@ -28,10 +28,41 @@ const copy={
     urgent:'National help and resource locators',urgentSub:'Pregnancy guidance and help locating nearby services.',
     wic:'WIC: nutrition for pregnant women, mothers, babies and children',medicaid:'Medicaid/CHIP: health coverage',healthy:'Healthy Start: local programs',snap:'SNAP: food assistance',tanf:'TANF and state social services',headstart:'Head Start and Early Head Start',
     option:'Option Line 24/7',care:'Find a pregnancy center',standing:'Resources by state',
-    pdfTitle:'Complete print-ready directory',pdfText:'View or download the portrait A4 PDF with contacts for all 50 states and national resources.',pdfButton:'Open or print the PDF',
+    pdfTitle:'Complete print-ready directory',pdfText:'View the A4 directory of all 50 states and save it as a PDF using the print option.',pdfButton:'Open or save as PDF',
     note:'Services, requirements and contacts may change. Confirm information directly with each organization. Family policy organizations may focus on education and public advocacy and may not provide direct material assistance.'
   }
 };
+
+// The print view uses the same live directory data as the interactive page.
+const printRoot=document.getElementById('uv-print-root');
+if(printRoot){
+  const resources=[['wic','https://www.fns.usda.gov/wic/locator'],['medicaid','https://www.medicaid.gov/about-us/where-can-people-get-help-medicaid-chip'],['healthy','https://mchb.hrsa.gov/programs-impact/healthy-start/locator'],['snap','https://www.fns.usda.gov/snap/state-directory'],['tanf','https://www.usa.gov/state-social-services'],['headstart','https://headstart.gov/'],['option','https://optionline.org/'],['care','https://care-net.org/find-a-pregnancy-center-dv/'],['standing','https://www.standingwithyou.org/state-resources/']];
+  function printRender(lang){
+    document.documentElement.lang=lang;
+    const t=copy[lang],es=lang==='es';
+    printRoot.replaceChildren();
+    printRoot.append(element('h1','',t.title),element('p','',t.sub),element('p','',t.note));
+    Object.keys(stateData).sort((a,b)=>stateLabel(a,lang).localeCompare(stateLabel(b,lang),lang)).forEach(state=>{
+      const group=element('section','print-state');group.append(element('h2','',stateLabel(state,lang)));
+      stateData[state].forEach(org=>{
+        const card=element('article','print-org');
+        card.append(element('h3','',org.name),element('p','kind',org.kind==='resource'?t.resource:org.kind==='support'?t.support:t.advocacy));
+        if(org.website||org.source){const url=org.website||org.source;const p=element('p','');p.append(externalLink(url,url,false));card.append(p)}
+        if(org.email){const p=element('p','');p.append(externalLink('mailto:'+org.email,org.email,false));card.append(p)}
+        if(org.phone){const p=element('p','');p.append(externalLink(phoneHref(org.phone),t.call+' '+org.phone,false));card.append(p)}
+        group.append(card);
+      });printRoot.append(group);
+    });
+    const group=element('section','print-state');group.append(element('h2','',t.benefits+' / '+t.urgent));
+    resources.forEach(([key,url])=>{const p=element('p','');p.append(externalLink(url,t[key]+(key==='option'?' · 1-800-712-4357':'')+' — '+url,false));group.append(p)});printRoot.append(group);
+    document.getElementById('uv-print-button').textContent=es?'Imprimir / Guardar PDF':'Print / Save PDF';
+  }
+  document.getElementById('uv-print-es').addEventListener('click',()=>printRender('es'));
+  document.getElementById('uv-print-en').addEventListener('click',()=>printRender('en'));
+  document.getElementById('uv-print-button').addEventListener('click',()=>window.print());
+  printRender(new URLSearchParams(location.search).get('lang')==='en'?'en':'es');
+  return;
+}
 
 const style=document.createElement('style');
 style.textContent=`
@@ -128,7 +159,7 @@ function render(){
     linksBlock(t.urgent,t.urgentSub,[[t.option+' · 1-800-712-4357','https://optionline.org/'],[t.care,'https://care-net.org/find-a-pregnancy-center-dv/'],[t.standing,'https://www.standingwithyou.org/state-resources/']])
   );
   const download=element('div','uvn-download');download.append(element('h3','',t.pdfTitle),element('p','',t.pdfText));
-  const pdf=externalLink('directorio-provida-eeuu-a4.html','⬇ '+t.pdfButton,false);download.append(pdf);wrap.append(download,element('p','uvn-note',t.note));section.append(wrap);
+  const pdf=externalLink('directorio-provida-eeuu-a4.html?lang='+lang,'⬇ '+t.pdfButton,false);download.append(pdf);wrap.append(download,element('p','uvn-note',t.note));section.append(wrap);
 }
 
 render();addNationalTile();
